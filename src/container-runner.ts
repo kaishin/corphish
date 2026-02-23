@@ -16,6 +16,7 @@ import {
   IDLE_TIMEOUT,
 } from './config.js';
 import { readEnvFile } from './env.js';
+import { HOST_PROXY_PORT } from './host-proxy.js';
 import { logger } from './logger.js';
 import { CONTAINER_RUNTIME_BIN, readonlyMountArgs, stopContainer } from './container-runtime.js';
 import { validateAdditionalMounts } from './mount-security.js';
@@ -182,7 +183,15 @@ function buildVolumeMounts(
  * Secrets are never written to disk or mounted as files.
  */
 function readSecrets(): Record<string, string> {
-  return readEnvFile(['CLAUDE_CODE_OAUTH_TOKEN', 'ANTHROPIC_API_KEY']);
+  const secrets = readEnvFile(['CLAUDE_CODE_OAUTH_TOKEN', 'ANTHROPIC_API_KEY', 'ANTHROPIC_BASE_URL', 'ANTHROPIC_MODEL']);
+  // Forward proxy so the container VM can reach hosts unreachable via its NAT
+  // (e.g. Minimax / Alibaba Cloud IPs). The host proxy listens on 192.168.65.1.
+  const proxyUrl = `http://192.168.65.1:${HOST_PROXY_PORT}`;
+  secrets['HTTPS_PROXY'] = proxyUrl;
+  secrets['HTTP_PROXY'] = proxyUrl;
+  secrets['https_proxy'] = proxyUrl;
+  secrets['http_proxy'] = proxyUrl;
+  return secrets;
 }
 
 function buildContainerArgs(mounts: VolumeMount[], containerName: string): string[] {

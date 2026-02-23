@@ -13,6 +13,7 @@ import {
   TRIGGER_PATTERN,
 } from './config.js';
 import { DiscordChannel } from './channels/discord.js';
+import { startHostProxy, HOST_PROXY_PORT } from './host-proxy.js';
 import { WhatsAppChannel } from './channels/whatsapp.js';
 import {
   ContainerOutput,
@@ -459,6 +460,7 @@ function ensureContainerSystemRunning(): void {
 
 async function main(): Promise<void> {
   ensureContainerSystemRunning();
+  startHostProxy();
   initDatabase();
   logger.info('Database initialized');
   loadState();

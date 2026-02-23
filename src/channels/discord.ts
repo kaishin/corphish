@@ -3,6 +3,7 @@ import {
   Events,
   GatewayIntentBits,
   Message,
+  Partials,
   TextChannel,
 } from 'discord.js';
 
@@ -41,21 +42,24 @@ export class DiscordChannel implements Channel {
         GatewayIntentBits.MessageContent,
         GatewayIntentBits.DirectMessages,
       ],
+      partials: [
+        Partials.Channel, // Required to receive DM messages
+        Partials.Message, // Required to receive uncached message events
+      ],
     });
 
     this.client.on(Events.MessageCreate, async (message: Message) => {
       // Ignore bot messages (including own)
       if (message.author.bot) return;
 
-      // For DMs (no guild), use user ID as JID for User Install support
-      // For guild messages, use channel ID
+      // For DMs, use user ID as stable JID. For guild messages, use channel ID.
       let chatJid: string;
       if (message.guild) {
         chatJid = `dc:${message.channelId}`;
       } else {
-        // DM: use user ID for stable JID across sessions
         chatJid = `dc:user-${message.author.id}`;
       }
+
       let content = message.content;
       const timestamp = message.createdAt.toISOString();
       const senderName =
@@ -195,25 +199,34 @@ export class DiscordChannel implements Channel {
     }
 
     try {
-      const channelId = jid.replace(/^dc:/, '');
-      const channel = await this.client.channels.fetch(channelId);
+      let sendFn: (text: string) => Promise<unknown>;
 
-      if (!channel || !('send' in channel)) {
-        logger.warn({ jid }, 'Discord channel not found or not text-based');
-        return;
+      if (jid.startsWith('dc:user-')) {
+        // DM: fetch the user and open/reuse their DM channel
+        const userId = jid.replace('dc:user-', '');
+        const user = await this.client.users.fetch(userId);
+        const dmChannel = await user.createDM();
+        sendFn = (t) => dmChannel.send(t);
+      } else {
+        const channelId = jid.replace(/^dc:/, '');
+        const channel = await this.client.channels.fetch(channelId);
+        if (!channel || !('send' in channel)) {
+          logger.warn({ jid }, 'Discord channel not found or not text-based');
+          return;
+        }
+        sendFn = (t) => (channel as TextChannel).send(t);
       }
-
-      const textChannel = channel as TextChannel;
 
       // Discord has a 2000 character limit per message — split if needed
       const MAX_LENGTH = 2000;
       if (text.length <= MAX_LENGTH) {
-        await textChannel.send(text);
+        await sendFn(text);
       } else {
         for (let i = 0; i < text.length; i += MAX_LENGTH) {
-          await textChannel.send(text.slice(i, i + MAX_LENGTH));
+          await sendFn(text.slice(i, i + MAX_LENGTH));
         }
       }
+
       logger.info({ jid, length: text.length }, 'Discord message sent');
     } catch (err) {
       logger.error({ jid, err }, 'Failed to send Discord message');
@@ -239,8 +252,15 @@ export class DiscordChannel implements Channel {
   async setTyping(jid: string, isTyping: boolean): Promise<void> {
     if (!this.client || !isTyping) return;
     try {
-      const channelId = jid.replace(/^dc:/, '');
-      const channel = await this.client.channels.fetch(channelId);
+      let channel;
+      if (jid.startsWith('dc:user-')) {
+        const userId = jid.replace('dc:user-', '');
+        const user = await this.client.users.fetch(userId);
+        channel = await user.createDM();
+      } else {
+        const channelId = jid.replace(/^dc:/, '');
+        channel = await this.client.channels.fetch(channelId);
+      }
       if (channel && 'sendTyping' in channel) {
         await (channel as TextChannel).sendTyping();
       }
