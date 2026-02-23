@@ -84,8 +84,19 @@ fi
 log "Mount allowlist: $MOUNT_ALLOWLIST"
 
 # Determine overall status
+# Allow WhatsApp auth to be missing if Discord-only mode is configured
+DISCORD_ONLY=false
+if grep -q "DISCORD_ONLY=true" "$PROJECT_ROOT/.env" 2>/dev/null; then
+  DISCORD_ONLY=true
+fi
+
 STATUS="success"
-if [ "$SERVICE" != "running" ] || [ "$CREDENTIALS" = "missing" ] || [ "$WHATSAPP_AUTH" = "not_found" ] || [ "$REGISTERED_GROUPS" -eq 0 ] 2>/dev/null; then
+if [ "$SERVICE" != "running" ] || [ "$CREDENTIALS" = "missing" ]; then
+  STATUS="failed"
+elif [ "$WHATSAPP_AUTH" = "not_found" ] && [ "$DISCORD_ONLY" = "false" ]; then
+  # Only fail on missing WhatsApp auth if not Discord-only
+  STATUS="failed"
+elif [ "$REGISTERED_GROUPS" -eq 0 ]; then
   STATUS="failed"
 fi
 
