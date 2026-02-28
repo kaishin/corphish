@@ -1,6 +1,6 @@
 # NanoClaw Architecture Overview
 
-NanoClaw is a personal AI assistant that connects Claude Code to WhatsApp through a single Node.js host process that spawns containerized agent instances. This document provides a focused architectural overview emphasizing the role of each file rather than implementation details.
+NanoClaw is a personal AI assistant that connects Claude Code to Discord through a single Node.js host process that spawns containerized agent instances. This document provides a focused architectural overview emphasizing the role of each file rather than implementation details.
 
 ## Core Design Principles
 
@@ -14,12 +14,12 @@ NanoClaw is a personal AI assistant that connects Claude Code to WhatsApp throug
 
 ```mermaid
 graph TB
-    subgraph "WhatsApp Layer"
-        WA[("WhatsApp<br/>Network")]
+    subgraph "Discord Layer"
+        DC[("Discord<br/>API")]
     end
 
     subgraph "Host Process (src/index.ts)"
-        WHATSAPP[src/channels/whatsapp.ts<br/>WhatsApp Connection]
+        DISCORD[src/channels/discord.ts<br/>Discord Connection]
         DB[src/db.ts<br/>SQLite Database]
         QUEUE[src/group-queue.ts<br/>Message Queue]
         SCHEDULER[src/task-scheduler.ts<br/>Task Scheduler]
@@ -37,8 +37,8 @@ graph TB
         FILES[groups/*/CLAUDE.md<br/>Per-Group Memory]
     end
 
-    WA --> WHATSAPP
-    WHATSAPP --> DB
+    DC --> DISCORD
+    DISCORD --> DB
     DB --> QUEUE
     QUEUE --> ROUTER
     ROUTER --> CONTAINER
@@ -56,13 +56,13 @@ graph TB
 | File                             | Role                                                                                                                                     |
 | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
 | [`src/index.ts`](src/index.ts)   | **Main orchestrator** - Entry point, message loop, agent invocation, state management. Maintains in-memory cursors for message recovery. |
-| [`src/router.ts`](src/router.ts) | **Message formatter and outbound router** - Formats messages for containers, routes responses back to WhatsApp                           |
+| [`src/router.ts`](src/router.ts) | **Message formatter and outbound router** - Formats messages for containers, routes responses back to Discord                            |
 
 ### Communication Channels
 
-| File                                                   | Role                                                                                                                    |
-| ------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------- |
-| [`src/channels/whatsapp.ts`](src/channels/whatsapp.ts) | **WhatsApp connection handler** - Baileys library integration for sending/receiving messages, authentication management |
+| File                                                 | Role                                                                                                                      |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| [`src/channels/discord.ts`](src/channels/discord.ts) | **Discord connection handler** - discord.js library integration for sending/receiving messages, authentication management |
 
 ### Message Processing
 
@@ -101,9 +101,9 @@ graph TB
 
 ### Authentication
 
-| File                                           | Role                                                                        |
-| ---------------------------------------------- | --------------------------------------------------------------------------- |
-| [`src/whatsapp-auth.ts`](src/whatsapp-auth.ts) | **WhatsApp authentication** - QR code and pairing code authentication flows |
+| File                                                               | Role |
+| ------------------------------------------------------------------ | ---- |
+| Discord uses bot token authentication via Discord Developer Portal |
 
 ### Types & Utilities
 
@@ -142,8 +142,8 @@ graph TB
 
 ```mermaid
 sequenceDiagram
-    participant WA as WhatsApp
-    participant WH as whatsapp.ts
+    participant DC as Discord
+    participant DH as discord.ts
     participant DB as db.ts
     participant Loop as index.ts<br/>Message Loop
     participant Queue as group-queue.ts
@@ -214,10 +214,10 @@ graph LR
 
 ## Quick Reference
 
-| Component                  | Purpose                                  |
-| -------------------------- | ---------------------------------------- |
-| `src/index.ts`             | Single source of truth - runs everything |
-| `src/db.ts`                | Single source of data - SQLite           |
-| `src/channels/whatsapp.ts` | WhatsApp integration                     |
-| `src/container-runner.ts`  | Agent container management               |
-| `groups/*/CLAUDE.md`       | Per-group persistent memory              |
+| Component                 | Purpose                                  |
+| ------------------------- | ---------------------------------------- |
+| `src/index.ts`            | Single source of truth - runs everything |
+| `src/db.ts`               | Single source of data - SQLite           |
+| `src/channels/discord.ts` | Discord integration                      |
+| `src/container-runner.ts` | Agent container management               |
+| `groups/*/CLAUDE.md`      | Per-group persistent memory              |

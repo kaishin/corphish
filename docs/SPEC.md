@@ -1,6 +1,6 @@
 # NanoClaw Specification
 
-A personal Claude assistant accessible via WhatsApp, with persistent memory per conversation, scheduled tasks, and email integration.
+A personal Claude assistant accessible via Discord, with persistent memory per conversation, scheduled tasks, and email integration.
 
 ---
 
@@ -29,8 +29,8 @@ A personal Claude assistant accessible via WhatsApp, with persistent memory per 
 ├─────────────────────────────────────────────────────────────────────┤
 │                                                                      │
 │  ┌──────────────┐                     ┌────────────────────┐        │
-│  │  WhatsApp    │────────────────────▶│   SQLite Database  │        │
-│  │  (baileys)   │◀────────────────────│   (messages.db)    │        │
+│  │  Discord     │────────────────────▶│   SQLite Database  │        │
+│  │  (discord.js)│◀────────────────────│   (messages.db)    │        │
 │  └──────────────┘   store/send        └─────────┬──────────┘        │
 │                                                  │                   │
 │         ┌────────────────────────────────────────┘                   │
@@ -71,14 +71,14 @@ A personal Claude assistant accessible via WhatsApp, with persistent memory per 
 
 ### Technology Stack
 
-| Component           | Technology                              | Purpose                                    |
-| ------------------- | --------------------------------------- | ------------------------------------------ |
-| WhatsApp Connection | Node.js (@whiskeysockets/baileys)       | Connect to WhatsApp, send/receive messages |
-| Message Storage     | SQLite (better-sqlite3)                 | Store messages for polling                 |
-| Container Runtime   | Containers (Linux VMs)                  | Isolated environments for agent execution  |
-| Agent               | @anthropic-ai/claude-agent-sdk (0.2.29) | Run Claude with tools and MCP servers      |
-| Browser Automation  | agent-browser + Chromium                | Web interaction and screenshots            |
-| Runtime             | Node.js 20+                             | Host process for routing and scheduling    |
+| Component          | Technology                              | Purpose                                   |
+| ------------------ | --------------------------------------- | ----------------------------------------- |
+| Discord Connection | Node.js (discord.js)                    | Connect to Discord, send/receive messages |
+| Message Storage    | SQLite (better-sqlite3)                 | Store messages for polling                |
+| Container Runtime  | Containers (Linux VMs)                  | Isolated environments for agent execution |
+| Agent              | @anthropic-ai/claude-agent-sdk (0.2.29) | Run Claude with tools and MCP servers     |
+| Browser Automation | agent-browser + Chromium                | Web interaction and screenshots           |
+| Runtime            | Node.js 20+                             | Host process for routing and scheduling   |
 
 ---
 
@@ -100,16 +100,15 @@ nanoclaw/
 ├── src/
 │   ├── index.ts                   # Orchestrator: state, message loop, agent invocation
 │   ├── channels/
-│   │   └── whatsapp.ts            # WhatsApp connection, auth, send/receive
+│   │   └── discord.ts             # Discord connection, auth, send/receive
 │   ├── ipc.ts                     # IPC watcher and task processing
 │   ├── router.ts                  # Message formatting and outbound routing
-│   ├── config.ts                  # Configuration constants
+│   ├── config.ts                   # Configuration constants
 │   ├── types.ts                   # TypeScript interfaces (includes Channel)
 │   ├── logger.ts                  # Pino logger setup
 │   ├── db.ts                      # SQLite database initialization and queries
 │   ├── group-queue.ts             # Per-group queue with global concurrency limit
 │   ├── mount-security.ts          # Mount allowlist validation for containers
-│   ├── whatsapp-auth.ts           # Standalone WhatsApp authentication
 │   ├── task-scheduler.ts          # Runs scheduled tasks when due
 │   └── container-runner.ts        # Spawns agents in containers
 │
@@ -132,7 +131,6 @@ nanoclaw/
 │       ├── setup/SKILL.md              # /setup - First-time installation
 │       ├── customize/SKILL.md          # /customize - Add capabilities
 │       ├── debug/SKILL.md              # /debug - Container debugging
-│       ├── add-telegram/SKILL.md       # /add-telegram - Telegram channel
 │       ├── add-gmail/SKILL.md          # /add-gmail - Gmail integration
 │       ├── add-voice-transcription/    # /add-voice-transcription - Whisper
 │       ├── x-integration/SKILL.md      # /x-integration - X/Twitter

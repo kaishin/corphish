@@ -52,8 +52,8 @@ describe('GroupQueue', () => {
     queue.setProcessMessagesFn(processMessages);
 
     // Enqueue two messages for the same group
-    queue.enqueueMessageCheck('group1@g.us');
-    queue.enqueueMessageCheck('group1@g.us');
+    queue.enqueueMessageCheck('dc:1111111111111111');
+    queue.enqueueMessageCheck('dc:1111111111111111');
 
     // Advance timers to let the first process complete
     await vi.advanceTimersByTimeAsync(200);
@@ -80,9 +80,9 @@ describe('GroupQueue', () => {
     queue.setProcessMessagesFn(processMessages);
 
     // Enqueue 3 groups (limit is 2)
-    queue.enqueueMessageCheck('group1@g.us');
-    queue.enqueueMessageCheck('group2@g.us');
-    queue.enqueueMessageCheck('group3@g.us');
+    queue.enqueueMessageCheck('dc:1111111111111111');
+    queue.enqueueMessageCheck('dc:2222222222222222');
+    queue.enqueueMessageCheck('dc:3333333333333333');
 
     // Let promises settle
     await vi.advanceTimersByTimeAsync(10);
@@ -118,15 +118,15 @@ describe('GroupQueue', () => {
     queue.setProcessMessagesFn(processMessages);
 
     // Start processing messages (takes the active slot)
-    queue.enqueueMessageCheck('group1@g.us');
+    queue.enqueueMessageCheck('dc:1111111111111111');
     await vi.advanceTimersByTimeAsync(10);
 
     // While active, enqueue both a task and pending messages
     const taskFn = vi.fn(async () => {
       executionOrder.push('task');
     });
-    queue.enqueueTask('group1@g.us', 'task-1', taskFn);
-    queue.enqueueMessageCheck('group1@g.us');
+    queue.enqueueTask('dc:1111111111111111', 'task-1', taskFn);
+    queue.enqueueMessageCheck('dc:1111111111111111');
 
     // Release the first processing
     resolveFirst!();
@@ -149,7 +149,7 @@ describe('GroupQueue', () => {
     });
 
     queue.setProcessMessagesFn(processMessages);
-    queue.enqueueMessageCheck('group1@g.us');
+    queue.enqueueMessageCheck('dc:1111111111111111');
 
     // First call happens immediately
     await vi.advanceTimersByTimeAsync(10);
@@ -174,7 +174,7 @@ describe('GroupQueue', () => {
 
     await queue.shutdown(1000);
 
-    queue.enqueueMessageCheck('group1@g.us');
+    queue.enqueueMessageCheck('dc:1111111111111111');
     await vi.advanceTimersByTimeAsync(100);
 
     expect(processMessages).not.toHaveBeenCalled();
@@ -191,7 +191,7 @@ describe('GroupQueue', () => {
     });
 
     queue.setProcessMessagesFn(processMessages);
-    queue.enqueueMessageCheck('group1@g.us');
+    queue.enqueueMessageCheck('dc:1111111111111111');
 
     // Run through all 5 retries (MAX_RETRIES = 5)
     // Initial call
@@ -226,21 +226,21 @@ describe('GroupQueue', () => {
     queue.setProcessMessagesFn(processMessages);
 
     // Fill both slots
-    queue.enqueueMessageCheck('group1@g.us');
-    queue.enqueueMessageCheck('group2@g.us');
+    queue.enqueueMessageCheck('dc:1111111111111111');
+    queue.enqueueMessageCheck('dc:2222222222222222');
     await vi.advanceTimersByTimeAsync(10);
 
     // Queue a third
-    queue.enqueueMessageCheck('group3@g.us');
+    queue.enqueueMessageCheck('dc:3333333333333333');
     await vi.advanceTimersByTimeAsync(10);
 
-    expect(processed).toEqual(['group1@g.us', 'group2@g.us']);
+    expect(processed).toEqual(['dc:1111111111111111', 'dc:2222222222222222']);
 
     // Free up a slot
     completionCallbacks[0]();
     await vi.advanceTimersByTimeAsync(10);
 
-    expect(processed).toContain('group3@g.us');
+    expect(processed).toContain('dc:3333333333333333');
   });
 
   // --- Idle preemption ---
@@ -259,15 +259,15 @@ describe('GroupQueue', () => {
     queue.setProcessMessagesFn(processMessages);
 
     // Start processing (takes the active slot)
-    queue.enqueueMessageCheck('group1@g.us');
+    queue.enqueueMessageCheck('dc:1111111111111111');
     await vi.advanceTimersByTimeAsync(10);
 
     // Register a process so closeStdin has a groupFolder
-    queue.registerProcess('group1@g.us', {} as any, 'container-1', 'test-group');
+    queue.registerProcess('dc:1111111111111111', {} as any, 'container-1', 'test-group');
 
     // Enqueue a task while container is active but NOT idle
     const taskFn = vi.fn(async () => {});
-    queue.enqueueTask('group1@g.us', 'task-1', taskFn);
+    queue.enqueueTask('dc:1111111111111111', 'task-1', taskFn);
 
     // _close should NOT have been written (container is working, not idle)
     const writeFileSync = vi.mocked(fs.default.writeFileSync);
@@ -294,19 +294,19 @@ describe('GroupQueue', () => {
     queue.setProcessMessagesFn(processMessages);
 
     // Start processing
-    queue.enqueueMessageCheck('group1@g.us');
+    queue.enqueueMessageCheck('dc:1111111111111111');
     await vi.advanceTimersByTimeAsync(10);
 
     // Register process and mark idle
-    queue.registerProcess('group1@g.us', {} as any, 'container-1', 'test-group');
-    queue.notifyIdle('group1@g.us');
+    queue.registerProcess('dc:1111111111111111', {} as any, 'container-1', 'test-group');
+    queue.notifyIdle('dc:1111111111111111');
 
     // Clear previous writes, then enqueue a task
     const writeFileSync = vi.mocked(fs.default.writeFileSync);
     writeFileSync.mockClear();
 
     const taskFn = vi.fn(async () => {});
-    queue.enqueueTask('group1@g.us', 'task-1', taskFn);
+    queue.enqueueTask('dc:1111111111111111', 'task-1', taskFn);
 
     // _close SHOULD have been written (container is idle)
     const closeWrites = writeFileSync.mock.calls.filter(
@@ -330,22 +330,22 @@ describe('GroupQueue', () => {
     });
 
     queue.setProcessMessagesFn(processMessages);
-    queue.enqueueMessageCheck('group1@g.us');
+    queue.enqueueMessageCheck('dc:1111111111111111');
     await vi.advanceTimersByTimeAsync(10);
-    queue.registerProcess('group1@g.us', {} as any, 'container-1', 'test-group');
+    queue.registerProcess('dc:1111111111111111', {} as any, 'container-1', 'test-group');
 
     // Container becomes idle
-    queue.notifyIdle('group1@g.us');
+    queue.notifyIdle('dc:1111111111111111');
 
     // A new user message arrives — resets idleWaiting
-    queue.sendMessage('group1@g.us', 'hello');
+    queue.sendMessage('dc:1111111111111111', 'hello');
 
     // Task enqueued after message reset — should NOT preempt (agent is working)
     const writeFileSync = vi.mocked(fs.default.writeFileSync);
     writeFileSync.mockClear();
 
     const taskFn = vi.fn(async () => {});
-    queue.enqueueTask('group1@g.us', 'task-1', taskFn);
+    queue.enqueueTask('dc:1111111111111111', 'task-1', taskFn);
 
     const closeWrites = writeFileSync.mock.calls.filter(
       (call) => typeof call[0] === 'string' && call[0].endsWith('_close'),
@@ -366,12 +366,12 @@ describe('GroupQueue', () => {
     });
 
     // Start a task (sets isTaskContainer = true)
-    queue.enqueueTask('group1@g.us', 'task-1', taskFn);
+    queue.enqueueTask('dc:1111111111111111', 'task-1', taskFn);
     await vi.advanceTimersByTimeAsync(10);
-    queue.registerProcess('group1@g.us', {} as any, 'container-1', 'test-group');
+    queue.registerProcess('dc:1111111111111111', {} as any, 'container-1', 'test-group');
 
     // sendMessage should return false — user messages must not go to task containers
-    const result = queue.sendMessage('group1@g.us', 'hello');
+    const result = queue.sendMessage('dc:1111111111111111', 'hello');
     expect(result).toBe(false);
 
     resolveTask!();
@@ -392,17 +392,17 @@ describe('GroupQueue', () => {
     queue.setProcessMessagesFn(processMessages);
 
     // Start processing
-    queue.enqueueMessageCheck('group1@g.us');
+    queue.enqueueMessageCheck('dc:1111111111111111');
     await vi.advanceTimersByTimeAsync(10);
 
     // Register process and enqueue a task (no idle yet — no preemption)
-    queue.registerProcess('group1@g.us', {} as any, 'container-1', 'test-group');
+    queue.registerProcess('dc:1111111111111111', {} as any, 'container-1', 'test-group');
 
     const writeFileSync = vi.mocked(fs.default.writeFileSync);
     writeFileSync.mockClear();
 
     const taskFn = vi.fn(async () => {});
-    queue.enqueueTask('group1@g.us', 'task-1', taskFn);
+    queue.enqueueTask('dc:1111111111111111', 'task-1', taskFn);
 
     let closeWrites = writeFileSync.mock.calls.filter(
       (call) => typeof call[0] === 'string' && call[0].endsWith('_close'),
@@ -411,7 +411,7 @@ describe('GroupQueue', () => {
 
     // Now container becomes idle — should preempt because task is pending
     writeFileSync.mockClear();
-    queue.notifyIdle('group1@g.us');
+    queue.notifyIdle('dc:1111111111111111');
 
     closeWrites = writeFileSync.mock.calls.filter(
       (call) => typeof call[0] === 'string' && call[0].endsWith('_close'),

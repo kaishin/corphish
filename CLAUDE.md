@@ -8,18 +8,18 @@ Single Node.js process that connects to Discord, routes messages to Claude Agent
 
 ## Key Files
 
-| File                       | Purpose                                             |
-| -------------------------- | --------------------------------------------------- |
-| `src/index.ts`             | Orchestrator: state, message loop, agent invocation |
-| `src/channels/discord.ts`  | Discord connection, auth, send/receive              |
-| `src/ipc.ts`               | IPC watcher and task processing                     |
-| `src/router.ts`            | Message formatting and outbound routing             |
-| `src/config.ts`            | Trigger pattern, paths, intervals                   |
-| `src/container-runner.ts`  | Spawns agent containers with mounts                 |
-| `src/host-proxy.ts`        | HTTP CONNECT proxy for container-to-host routing    |
-| `src/task-scheduler.ts`    | Runs scheduled tasks                                |
-| `src/db.ts`                | SQLite operations                                   |
-| `groups/{name}/CLAUDE.md`  | Per-group memory (isolated)                         |
+| File                      | Purpose                                             |
+| ------------------------- | --------------------------------------------------- |
+| `src/index.ts`            | Orchestrator: state, message loop, agent invocation |
+| `src/channels/discord.ts` | Discord connection, auth, send/receive              |
+| `src/ipc.ts`              | IPC watcher and task processing                     |
+| `src/router.ts`           | Message formatting and outbound routing             |
+| `src/config.ts`           | Trigger pattern, paths, intervals                   |
+| `src/container-runner.ts` | Spawns agent containers with mounts                 |
+| `src/host-proxy.ts`       | HTTP CONNECT proxy for container-to-host routing    |
+| `src/task-scheduler.ts`   | Runs scheduled tasks                                |
+| `src/db.ts`               | SQLite operations                                   |
+| `groups/{name}/CLAUDE.md` | Per-group memory (isolated)                         |
 
 ## Skills
 
@@ -33,8 +33,6 @@ Two types of skills exist in this project.
 | `/customize`                  | Adding channels, integrations, changing behavior        |
 | `/debug`                      | Container issues, logs, troubleshooting                 |
 | `/add-discord`                | Add Discord as a channel                                |
-| `/add-telegram`               | Add Telegram as a channel                               |
-| `/add-telegram-swarm`         | Add agent swarm support to Telegram                     |
 | `/add-gmail`                  | Add Gmail integration                                   |
 | `/convert-to-apple-container` | Switch from Docker to Apple Container                   |
 | `/x-integration`              | Add X (Twitter) integration                             |

@@ -12,8 +12,8 @@ import { NewMessage } from './types.js';
 function makeMsg(overrides: Partial<NewMessage> = {}): NewMessage {
   return {
     id: '1',
-    chat_jid: 'group@g.us',
-    sender: '123@s.whatsapp.net',
+    chat_jid: 'dc:1234567890123456',
+    sender: 'user1',
     sender_name: 'Alice',
     content: 'hello',
     timestamp: '2024-01-01T00:00:00.000Z',
@@ -69,7 +69,12 @@ describe('formatMessages', () => {
 
   it('formats multiple messages', () => {
     const msgs = [
-      makeMsg({ id: '1', sender_name: 'Alice', content: 'hi', timestamp: 't1' }),
+      makeMsg({
+        id: '1',
+        sender_name: 'Alice',
+        content: 'hi',
+        timestamp: 't1',
+      }),
       makeMsg({ id: '2', sender_name: 'Bob', content: 'hey', timestamp: 't2' }),
     ];
     const result = formatMessages(msgs);
@@ -154,9 +159,7 @@ describe('stripInternalTags', () => {
 
   it('strips multiple internal tag blocks', () => {
     expect(
-      stripInternalTags(
-        '<internal>a</internal>hello<internal>b</internal>',
-      ),
+      stripInternalTags('<internal>a</internal>hello<internal>b</internal>'),
     ).toBe('hello');
   });
 

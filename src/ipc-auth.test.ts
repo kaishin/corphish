@@ -40,15 +40,15 @@ beforeEach(() => {
   _initTestDatabase();
 
   groups = {
-    'main@g.us': MAIN_GROUP,
-    'other@g.us': OTHER_GROUP,
-    'third@g.us': THIRD_GROUP,
+    'dc:1111111111111111': MAIN_GROUP,
+    'dc:2222222222222222': OTHER_GROUP,
+    'dc:3333333333333333': THIRD_GROUP,
   };
 
   // Populate DB as well
-  setRegisteredGroup('main@g.us', MAIN_GROUP);
-  setRegisteredGroup('other@g.us', OTHER_GROUP);
-  setRegisteredGroup('third@g.us', THIRD_GROUP);
+  setRegisteredGroup('dc:1111111111111111', MAIN_GROUP);
+  setRegisteredGroup('dc:2222222222222222', OTHER_GROUP);
+  setRegisteredGroup('dc:3333333333333333', THIRD_GROUP);
 
   deps = {
     sendMessage: async () => {},
@@ -74,7 +74,7 @@ describe('schedule_task authorization', () => {
         prompt: 'do something',
         schedule_type: 'once',
         schedule_value: '2025-06-01T00:00:00.000Z',
-        targetJid: 'other@g.us',
+        targetJid: 'dc:2222222222222222',
       },
       'main',
       true,
@@ -94,7 +94,7 @@ describe('schedule_task authorization', () => {
         prompt: 'self task',
         schedule_type: 'once',
         schedule_value: '2025-06-01T00:00:00.000Z',
-        targetJid: 'other@g.us',
+        targetJid: 'dc:2222222222222222',
       },
       'other-group',
       false,
@@ -113,7 +113,7 @@ describe('schedule_task authorization', () => {
         prompt: 'unauthorized',
         schedule_type: 'once',
         schedule_value: '2025-06-01T00:00:00.000Z',
-        targetJid: 'main@g.us',
+        targetJid: 'dc:1111111111111111',
       },
       'other-group',
       false,
@@ -131,7 +131,7 @@ describe('schedule_task authorization', () => {
         prompt: 'no target',
         schedule_type: 'once',
         schedule_value: '2025-06-01T00:00:00.000Z',
-        targetJid: 'unknown@g.us',
+        targetJid: 'dc:9999999999999999',
       },
       'main',
       true,
@@ -150,7 +150,7 @@ describe('pause_task authorization', () => {
     createTask({
       id: 'task-main',
       group_folder: 'main',
-      chat_jid: 'main@g.us',
+      chat_jid: 'dc:1111111111111111',
       prompt: 'main task',
       schedule_type: 'once',
       schedule_value: '2025-06-01T00:00:00.000Z',
@@ -162,7 +162,7 @@ describe('pause_task authorization', () => {
     createTask({
       id: 'task-other',
       group_folder: 'other-group',
-      chat_jid: 'other@g.us',
+      chat_jid: 'dc:2222222222222222',
       prompt: 'other task',
       schedule_type: 'once',
       schedule_value: '2025-06-01T00:00:00.000Z',
@@ -211,7 +211,7 @@ describe('resume_task authorization', () => {
     createTask({
       id: 'task-paused',
       group_folder: 'other-group',
-      chat_jid: 'other@g.us',
+      chat_jid: 'dc:2222222222222222',
       prompt: 'paused task',
       schedule_type: 'once',
       schedule_value: '2025-06-01T00:00:00.000Z',
@@ -260,7 +260,7 @@ describe('cancel_task authorization', () => {
     createTask({
       id: 'task-to-cancel',
       group_folder: 'other-group',
-      chat_jid: 'other@g.us',
+      chat_jid: 'dc:2222222222222222',
       prompt: 'cancel me',
       schedule_type: 'once',
       schedule_value: '2025-06-01T00:00:00.000Z',
@@ -283,7 +283,7 @@ describe('cancel_task authorization', () => {
     createTask({
       id: 'task-own',
       group_folder: 'other-group',
-      chat_jid: 'other@g.us',
+      chat_jid: 'dc:2222222222222222',
       prompt: 'my task',
       schedule_type: 'once',
       schedule_value: '2025-06-01T00:00:00.000Z',
@@ -306,7 +306,7 @@ describe('cancel_task authorization', () => {
     createTask({
       id: 'task-foreign',
       group_folder: 'main',
-      chat_jid: 'main@g.us',
+      chat_jid: 'dc:1111111111111111',
       prompt: 'not yours',
       schedule_type: 'once',
       schedule_value: '2025-06-01T00:00:00.000Z',
@@ -333,7 +333,7 @@ describe('register_group authorization', () => {
     await processTaskIpc(
       {
         type: 'register_group',
-        jid: 'new@g.us',
+        jid: 'dc:4444444444444444',
         name: 'New Group',
         folder: 'new-group',
         trigger: '@Krabby',
@@ -344,7 +344,7 @@ describe('register_group authorization', () => {
     );
 
     // registeredGroups should not have changed
-    expect(groups['new@g.us']).toBeUndefined();
+    expect(groups['dc:4444444444444444']).toBeUndefined();
   });
 });
 
@@ -380,34 +380,34 @@ describe('IPC message authorization', () => {
   }
 
   it('main group can send to any group', () => {
-    expect(isMessageAuthorized('main', true, 'other@g.us', groups)).toBe(true);
-    expect(isMessageAuthorized('main', true, 'third@g.us', groups)).toBe(true);
+    expect(isMessageAuthorized('main', true, 'dc:2222222222222222', groups)).toBe(true);
+    expect(isMessageAuthorized('main', true, 'dc:3333333333333333', groups)).toBe(true);
   });
 
   it('non-main group can send to its own chat', () => {
     expect(
-      isMessageAuthorized('other-group', false, 'other@g.us', groups),
+      isMessageAuthorized('other-group', false, 'dc:2222222222222222', groups),
     ).toBe(true);
   });
 
   it('non-main group cannot send to another groups chat', () => {
-    expect(isMessageAuthorized('other-group', false, 'main@g.us', groups)).toBe(
+    expect(isMessageAuthorized('other-group', false, 'dc:1111111111111111', groups)).toBe(
       false,
     );
     expect(
-      isMessageAuthorized('other-group', false, 'third@g.us', groups),
+      isMessageAuthorized('other-group', false, 'dc:3333333333333333', groups),
     ).toBe(false);
   });
 
   it('non-main group cannot send to unregistered JID', () => {
     expect(
-      isMessageAuthorized('other-group', false, 'unknown@g.us', groups),
+      isMessageAuthorized('other-group', false, 'dc:9999999999999999', groups),
     ).toBe(false);
   });
 
   it('main group can send to unregistered JID', () => {
     // Main is always authorized regardless of target
-    expect(isMessageAuthorized('main', true, 'unknown@g.us', groups)).toBe(
+    expect(isMessageAuthorized('main', true, 'dc:9999999999999999', groups)).toBe(
       true,
     );
   });
@@ -423,7 +423,7 @@ describe('schedule_task schedule types', () => {
         prompt: 'cron task',
         schedule_type: 'cron',
         schedule_value: '0 9 * * *', // every day at 9am
-        targetJid: 'other@g.us',
+        targetJid: 'dc:2222222222222222',
       },
       'main',
       true,
@@ -447,7 +447,7 @@ describe('schedule_task schedule types', () => {
         prompt: 'bad cron',
         schedule_type: 'cron',
         schedule_value: 'not a cron',
-        targetJid: 'other@g.us',
+        targetJid: 'dc:2222222222222222',
       },
       'main',
       true,
@@ -466,7 +466,7 @@ describe('schedule_task schedule types', () => {
         prompt: 'interval task',
         schedule_type: 'interval',
         schedule_value: '3600000', // 1 hour
-        targetJid: 'other@g.us',
+        targetJid: 'dc:2222222222222222',
       },
       'main',
       true,
@@ -489,7 +489,7 @@ describe('schedule_task schedule types', () => {
         prompt: 'bad interval',
         schedule_type: 'interval',
         schedule_value: 'abc',
-        targetJid: 'other@g.us',
+        targetJid: 'dc:2222222222222222',
       },
       'main',
       true,
@@ -506,7 +506,7 @@ describe('schedule_task schedule types', () => {
         prompt: 'zero interval',
         schedule_type: 'interval',
         schedule_value: '0',
-        targetJid: 'other@g.us',
+        targetJid: 'dc:2222222222222222',
       },
       'main',
       true,
@@ -523,7 +523,7 @@ describe('schedule_task schedule types', () => {
         prompt: 'bad once',
         schedule_type: 'once',
         schedule_value: 'not-a-date',
-        targetJid: 'other@g.us',
+        targetJid: 'dc:2222222222222222',
       },
       'main',
       true,
@@ -545,7 +545,7 @@ describe('schedule_task context_mode', () => {
         schedule_type: 'once',
         schedule_value: '2025-06-01T00:00:00.000Z',
         context_mode: 'group',
-        targetJid: 'other@g.us',
+        targetJid: 'dc:2222222222222222',
       },
       'main',
       true,
@@ -564,7 +564,7 @@ describe('schedule_task context_mode', () => {
         schedule_type: 'once',
         schedule_value: '2025-06-01T00:00:00.000Z',
         context_mode: 'isolated',
-        targetJid: 'other@g.us',
+        targetJid: 'dc:2222222222222222',
       },
       'main',
       true,
@@ -583,7 +583,7 @@ describe('schedule_task context_mode', () => {
         schedule_type: 'once',
         schedule_value: '2025-06-01T00:00:00.000Z',
         context_mode: 'bogus' as any,
-        targetJid: 'other@g.us',
+        targetJid: 'dc:2222222222222222',
       },
       'main',
       true,
@@ -601,7 +601,7 @@ describe('schedule_task context_mode', () => {
         prompt: 'no context mode',
         schedule_type: 'once',
         schedule_value: '2025-06-01T00:00:00.000Z',
-        targetJid: 'other@g.us',
+        targetJid: 'dc:2222222222222222',
       },
       'main',
       true,
@@ -620,7 +620,7 @@ describe('register_group success', () => {
     await processTaskIpc(
       {
         type: 'register_group',
-        jid: 'new@g.us',
+        jid: 'dc:4444444444444444',
         name: 'New Group',
         folder: 'new-group',
         trigger: '@Krabby',
@@ -631,7 +631,7 @@ describe('register_group success', () => {
     );
 
     // Verify group was registered in DB
-    const group = getRegisteredGroup('new@g.us');
+    const group = getRegisteredGroup('dc:4444444444444444');
     expect(group).toBeDefined();
     expect(group!.name).toBe('New Group');
     expect(group!.folder).toBe('new-group');
@@ -642,7 +642,7 @@ describe('register_group success', () => {
     await processTaskIpc(
       {
         type: 'register_group',
-        jid: 'partial@g.us',
+        jid: 'dc:5555555555555555',
         name: 'Partial',
         // missing folder and trigger
       },
@@ -651,6 +651,6 @@ describe('register_group success', () => {
       deps,
     );
 
-    expect(getRegisteredGroup('partial@g.us')).toBeUndefined();
+    expect(getRegisteredGroup('dc:5555555555555555')).toBeUndefined();
   });
 });

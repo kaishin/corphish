@@ -30,7 +30,7 @@ Then run `/setup`. Claude Code handles everything: dependencies, authentication,
 
 **Built for one user.** Fork it and have Claude Code make it match your exact needs.
 
-**Skills over features.** New capabilities are contributed as [Claude Code skills](https://code.claude.com/docs/en/skills) — `/add-telegram`, `/add-gmail`, etc. — that transform your fork. You get clean code that does exactly what you need.
+**Skills over features.** New capabilities are contributed as [Claude Code skills](https://code.claude.com/docs/en/skills) — `/add-gmail`, `/add-x`, etc. — that transform your fork. You get clean code that does exactly what you need.
 
 ## What It Supports
 
@@ -40,7 +40,7 @@ Then run `/setup`. Claude Code handles everything: dependencies, authentication,
 - **Scheduled tasks** — Recurring jobs that run Claude and message you back
 - **Web access** — Search and fetch content
 - **Agent Swarms** — Teams of specialized agents that collaborate on complex tasks
-- **Optional integrations** — Gmail, X, Telegram and more via skills
+- **Optional integrations** — Gmail, X and more via skills
 
 ## Usage
 
@@ -78,7 +78,7 @@ There are two types of skills:
 
 These skills modify the NanoClaw codebase using the skills engine. They're used for adding channels, changing triggers, or modifying core behavior.
 
-**Example**: `/add-telegram` adds Telegram support by creating `src/channels/telegram.ts` and modifying core files.
+**Example**: `/add-gmail` adds Gmail support by creating `src/channels/gmail.ts` and modifying core files.
 
 ### Container Skills (`container/skills/`)
 
@@ -145,7 +145,7 @@ The skill will now be available to the agent inside the container.
 
 **Don't add features. Add skills.**
 
-Contribute a skill file (`.claude/skills/add-telegram/SKILL.md`) that teaches Claude Code how to transform a NanoClaw installation. Users run `/add-telegram` on their fork and get clean code that does exactly what they need.
+Contribute a skill file (`.claude/skills/add-gmail/SKILL.md`) that teaches Claude Code how to transform a NanoClaw installation. Users run `/add-gmail` on their fork and get clean code that does exactly what they need.
 
 Security fixes, bug fixes, and clear improvements to the base configuration are accepted as PRs. Everything else should be a skill.
 
