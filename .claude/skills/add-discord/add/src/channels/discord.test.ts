@@ -4,8 +4,8 @@ import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 
 // Mock config
 vi.mock('../config.js', () => ({
-  ASSISTANT_NAME: 'Andy',
-  TRIGGER_PATTERN: /^@Andy\b/i,
+  ASSISTANT_NAME: 'Krabby',
+  TRIGGER_PATTERN: /^@Krabby\b/i,
 }));
 
 // Mock logger
@@ -40,7 +40,7 @@ vi.mock('discord.js', () => {
 
   class MockClient {
     eventHandlers = new Map<string, Handler[]>();
-    user: any = { id: '999888777', tag: 'Andy#1234' };
+    user: any = { id: '999888777', tag: 'Krabby#1234' };
     private _ready = false;
 
     constructor(_opts: any) {
@@ -108,7 +108,7 @@ function createTestOpts(
       'dc:1234567890123456': {
         name: 'Test Server #general',
         folder: 'test-server',
-        trigger: '@Andy',
+        trigger: '@Krabby',
         added_at: '2024-01-01T00:00:00.000Z',
       },
     })),
@@ -155,9 +155,7 @@ function createMessage(overrides: {
     member: overrides.memberDisplayName
       ? { displayName: overrides.memberDisplayName }
       : null,
-    guild: overrides.guildName
-      ? { name: overrides.guildName }
-      : null,
+    guild: overrides.guildName ? { name: overrides.guildName } : null,
     channel: {
       name: overrides.channelName ?? 'general',
       messages: {
@@ -346,7 +344,7 @@ describe('DiscordChannel', () => {
           'dc:1234567890123456': {
             name: 'DM',
             folder: 'dm',
-            trigger: '@Andy',
+            trigger: '@Krabby',
             added_at: '2024-01-01T00:00:00.000Z',
           },
         })),
@@ -406,7 +404,7 @@ describe('DiscordChannel', () => {
       expect(opts.onMessage).toHaveBeenCalledWith(
         'dc:1234567890123456',
         expect.objectContaining({
-          content: '@Andy what time is it?',
+          content: '@Krabby what time is it?',
         }),
       );
     });
@@ -417,18 +415,18 @@ describe('DiscordChannel', () => {
       await channel.connect();
 
       const msg = createMessage({
-        content: '@Andy hello <@999888777>',
+        content: '@Krabby hello <@999888777>',
         mentionsBotId: true,
         guildName: 'Server',
       });
       await triggerMessage(msg);
 
-      // Should NOT prepend @Andy — already starts with trigger
+      // Should NOT prepend @Krabby — already starts with trigger
       // But the <@botId> should still be stripped
       expect(opts.onMessage).toHaveBeenCalledWith(
         'dc:1234567890123456',
         expect.objectContaining({
-          content: '@Andy hello',
+          content: '@Krabby hello',
         }),
       );
     });
@@ -467,7 +465,7 @@ describe('DiscordChannel', () => {
       expect(opts.onMessage).toHaveBeenCalledWith(
         'dc:1234567890123456',
         expect.objectContaining({
-          content: '@Andy check this',
+          content: '@Krabby check this',
         }),
       );
     });
@@ -627,8 +625,11 @@ describe('DiscordChannel', () => {
 
       await channel.sendMessage('dc:1234567890123456', 'Hello');
 
-      const fetchedChannel = await currentClient().channels.fetch('1234567890123456');
-      expect(currentClient().channels.fetch).toHaveBeenCalledWith('1234567890123456');
+      const fetchedChannel =
+        await currentClient().channels.fetch('1234567890123456');
+      expect(currentClient().channels.fetch).toHaveBeenCalledWith(
+        '1234567890123456',
+      );
     });
 
     it('strips dc: prefix from JID', async () => {

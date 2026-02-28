@@ -80,7 +80,7 @@ export class DiscordChannel implements Channel {
 
       // Translate Discord @bot mentions into TRIGGER_PATTERN format.
       // Discord mentions look like <@botUserId> — these won't match
-      // TRIGGER_PATTERN (e.g., ^@Andy\b), so we prepend the trigger
+      // TRIGGER_PATTERN (e.g., ^@Krabby\b), so we prepend the trigger
       // when the bot is @mentioned.
       if (this.client?.user) {
         const botId = this.client.user.id;
@@ -124,7 +124,8 @@ export class DiscordChannel implements Channel {
         }
       }
 
-      // Handle reply context — include who the user is replying to
+      // Handle reply context — include who the user is replying to.
+      // Replying to the bot also acts as a trigger (no @mention needed).
       if (message.reference?.messageId) {
         try {
           const repliedTo = await message.channel.messages.fetch(
@@ -135,6 +136,12 @@ export class DiscordChannel implements Channel {
             repliedTo.author.displayName ||
             repliedTo.author.username;
           content = `[Reply to ${replyAuthor}] ${content}`;
+
+          if (this.client?.user && repliedTo.author.id === this.client.user.id) {
+            if (!TRIGGER_PATTERN.test(content)) {
+              content = `@${ASSISTANT_NAME} ${content}`;
+            }
+          }
         } catch {
           // Referenced message may have been deleted
         }

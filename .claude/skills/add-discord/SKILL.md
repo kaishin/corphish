@@ -10,11 +10,7 @@ Read `.nanoclaw/state.yaml`. If `discord` is in `applied_skills`, skip to Phase 
 
 ### Ask the user
 
-1. **Mode**: Replace WhatsApp or add alongside it?
-   - Replace → will set `DISCORD_ONLY=true`
-   - Alongside → both channels active (default)
-
-2. **Do they already have a bot token?** If yes, collect it now. If no, we'll create one in Phase 3.
+1. **Do they already have a bot token?** If yes, collect it now. If no, we'll create one in Phase 3.
 
 ## Phase 2: Apply Code Changes
 
@@ -37,6 +33,7 @@ npx tsx scripts/apply-skill.ts .claude/skills/add-discord
 ```
 
 This deterministically:
+
 - Adds `src/channels/discord.ts` (DiscordChannel class implementing Channel interface)
 - Adds `src/channels/discord.test.ts` (unit tests with discord.js mock)
 - Three-way merges Discord support into `src/index.ts` (multi-channel support, findChannel routing)
@@ -47,6 +44,7 @@ This deterministically:
 - Records the application in `.nanoclaw/state.yaml`
 
 If the apply reports merge conflicts, read the intent files:
+
 - `modify/src/index.ts.intent.md` — what changed and invariants for index.ts
 - `modify/src/config.ts.intent.md` — what changed for config.ts
 
@@ -68,7 +66,7 @@ If the user doesn't have a bot token, tell them:
 > I need you to create a Discord bot:
 >
 > 1. Go to the [Discord Developer Portal](https://discord.com/developers/applications)
-> 2. Click **New Application** and give it a name (e.g., "Andy Assistant")
+> 2. Click **New Application** and give it a name (e.g., "Krabby Assistant")
 > 3. Go to the **Bot** tab on the left sidebar
 > 4. Click **Reset Token** to generate a new bot token — copy it immediately (you can only see it once)
 > 5. Under **Privileged Gateway Intents**, enable:
@@ -87,12 +85,6 @@ Add to `.env`:
 
 ```bash
 DISCORD_BOT_TOKEN=<their-token>
-```
-
-If they chose to replace WhatsApp:
-
-```bash
-DISCORD_ONLY=true
 ```
 
 Sync to container environment:
@@ -133,9 +125,9 @@ Use the IPC register flow or register directly. The channel ID, name, and folder
 For a main channel (responds to all messages, uses the `main` folder):
 
 ```typescript
-registerGroup("dc:<channel-id>", {
-  name: "<server-name> #<channel-name>",
-  folder: "main",
+registerGroup('dc:<channel-id>', {
+  name: '<server-name> #<channel-name>',
+  folder: 'main',
   trigger: `@${ASSISTANT_NAME}`,
   added_at: new Date().toISOString(),
   requiresTrigger: false,
@@ -145,9 +137,9 @@ registerGroup("dc:<channel-id>", {
 For additional channels (trigger-only):
 
 ```typescript
-registerGroup("dc:<channel-id>", {
-  name: "<server-name> #<channel-name>",
-  folder: "<folder-name>",
+registerGroup('dc:<channel-id>', {
+  name: '<server-name> #<channel-name>',
+  folder: '<folder-name>',
   trigger: `@${ASSISTANT_NAME}`,
   added_at: new Date().toISOString(),
   requiresTrigger: true,
@@ -161,6 +153,7 @@ registerGroup("dc:<channel-id>", {
 Tell the user:
 
 > Send a message in your registered Discord channel:
+>
 > - For main channel: Any message works
 > - For non-main: @mention the bot in Discord
 >
@@ -185,12 +178,14 @@ tail -f logs/nanoclaw.log
 ### Bot only responds to @mentions
 
 This is the default behavior for non-main channels (`requiresTrigger: true`). To change:
+
 - Update the registered group's `requiresTrigger` to `false`
 - Or register the channel as the main channel
 
 ### Message Content Intent not enabled
 
 If the bot connects but can't read messages, ensure:
+
 1. Go to [Discord Developer Portal](https://discord.com/developers/applications)
 2. Select your application > **Bot** tab
 3. Under **Privileged Gateway Intents**, enable **Message Content Intent**
@@ -199,12 +194,14 @@ If the bot connects but can't read messages, ensure:
 ### Getting Channel ID
 
 If you can't copy the channel ID:
+
 - Ensure **Developer Mode** is enabled: User Settings > Advanced > Developer Mode
 - Right-click the channel name in the server sidebar > Copy Channel ID
 
 ## After Setup
 
 The Discord bot supports:
+
 - Text messages in registered channels
 - Attachment descriptions (images, videos, files shown as placeholders)
 - Reply context (shows who the user is replying to)

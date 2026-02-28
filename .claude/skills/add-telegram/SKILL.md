@@ -42,6 +42,7 @@ npx tsx scripts/apply-skill.ts .claude/skills/add-telegram
 ```
 
 This deterministically:
+
 - Adds `src/channels/telegram.ts` (TelegramChannel class implementing Channel interface)
 - Adds `src/channels/telegram.test.ts` (46 unit tests)
 - Three-way merges Telegram support into `src/index.ts` (multi-channel support, findChannel routing)
@@ -52,6 +53,7 @@ This deterministically:
 - Records the application in `.nanoclaw/state.yaml`
 
 If the apply reports merge conflicts, read the intent files:
+
 - `modify/src/index.ts.intent.md` — what changed and invariants for index.ts
 - `modify/src/config.ts.intent.md` — what changed for config.ts
 
@@ -74,8 +76,8 @@ If the user doesn't have a bot token, tell them:
 >
 > 1. Open Telegram and search for `@BotFather`
 > 2. Send `/newbot` and follow prompts:
->    - Bot name: Something friendly (e.g., "Andy Assistant")
->    - Bot username: Must end with "bot" (e.g., "andy_ai_bot")
+>    - Bot name: Something friendly (e.g., "Krabby Assistant")
+>    - Bot username: Must end with "bot" (e.g., "krabby_ai_bot")
 > 3. Copy the bot token (looks like `123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11`)
 
 Wait for the user to provide the token.
@@ -140,9 +142,9 @@ Use the IPC register flow or register directly. The chat ID, name, and folder na
 For a main chat (responds to all messages, uses the `main` folder):
 
 ```typescript
-registerGroup("tg:<chat-id>", {
-  name: "<chat-name>",
-  folder: "main",
+registerGroup('tg:<chat-id>', {
+  name: '<chat-name>',
+  folder: 'main',
   trigger: `@${ASSISTANT_NAME}`,
   added_at: new Date().toISOString(),
   requiresTrigger: false,
@@ -152,9 +154,9 @@ registerGroup("tg:<chat-id>", {
 For additional chats (trigger-only):
 
 ```typescript
-registerGroup("tg:<chat-id>", {
-  name: "<chat-name>",
-  folder: "<folder-name>",
+registerGroup('tg:<chat-id>', {
+  name: '<chat-name>',
+  folder: '<folder-name>',
   trigger: `@${ASSISTANT_NAME}`,
   added_at: new Date().toISOString(),
   requiresTrigger: true,
@@ -168,8 +170,9 @@ registerGroup("tg:<chat-id>", {
 Tell the user:
 
 > Send a message to your registered Telegram chat:
+>
 > - For main chat: Any message works
-> - For non-main: `@Andy hello` or @mention the bot
+> - For non-main: `@Krabby hello` or @mention the bot
 >
 > The bot should respond within a few seconds.
 
@@ -191,12 +194,14 @@ tail -f logs/nanoclaw.log
 ### Bot only responds to @mentions in groups
 
 Group Privacy is enabled (default). Fix:
+
 1. `@BotFather` > `/mybots` > select bot > **Bot Settings** > **Group Privacy** > **Turn off**
 2. Remove and re-add the bot to the group (required for the change to take effect)
 
 ### Getting chat ID
 
 If `/chatid` doesn't work:
+
 - Verify token: `curl -s "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getMe"`
 - Check bot is started: `tail -f logs/nanoclaw.log`
 

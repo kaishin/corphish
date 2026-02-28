@@ -4,8 +4,8 @@ import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 
 // Mock config
 vi.mock('../config.js', () => ({
-  ASSISTANT_NAME: 'Andy',
-  TRIGGER_PATTERN: /^@Andy\b/i,
+  ASSISTANT_NAME: 'Krabby',
+  TRIGGER_PATTERN: /^@Krabby\b/i,
 }));
 
 // Mock logger
@@ -56,7 +56,7 @@ vi.mock('grammy', () => ({
     }
 
     start(opts: { onStart: (botInfo: any) => void }) {
-      opts.onStart({ username: 'andy_ai_bot', id: 12345 });
+      opts.onStart({ username: 'krabby_ai_bot', id: 12345 });
     }
 
     stop() {}
@@ -77,7 +77,7 @@ function createTestOpts(
       'tg:100200300': {
         name: 'Test Group',
         folder: 'test-group',
-        trigger: '@Andy',
+        trigger: '@Krabby',
         added_at: '2024-01-01T00:00:00.000Z',
       },
     })),
@@ -116,7 +116,7 @@ function createTextCtx(overrides: {
       message_id: overrides.messageId ?? 1,
       entities: overrides.entities ?? [],
     },
-    me: { username: 'andy_ai_bot' },
+    me: { username: 'krabby_ai_bot' },
     reply: vi.fn(),
   };
 }
@@ -149,7 +149,7 @@ function createMediaCtx(overrides: {
       caption: overrides.caption,
       ...(overrides.extra || {}),
     },
-    me: { username: 'andy_ai_bot' },
+    me: { username: 'krabby_ai_bot' },
   };
 }
 
@@ -348,7 +348,7 @@ describe('TelegramChannel', () => {
           'tg:100200300': {
             name: 'Private',
             folder: 'private',
-            trigger: '@Andy',
+            trigger: '@Krabby',
             added_at: '2024-01-01T00:00:00.000Z',
           },
         })),
@@ -416,7 +416,7 @@ describe('TelegramChannel', () => {
       await channel.connect();
 
       const ctx = createTextCtx({
-        text: '@andy_ai_bot what time is it?',
+        text: '@krabby_ai_bot what time is it?',
         entities: [{ type: 'mention', offset: 0, length: 12 }],
       });
       await triggerTextMessage(ctx);
@@ -424,7 +424,7 @@ describe('TelegramChannel', () => {
       expect(opts.onMessage).toHaveBeenCalledWith(
         'tg:100200300',
         expect.objectContaining({
-          content: '@Andy @andy_ai_bot what time is it?',
+          content: '@Krabby @krabby_ai_bot what time is it?',
         }),
       );
     });
@@ -435,16 +435,16 @@ describe('TelegramChannel', () => {
       await channel.connect();
 
       const ctx = createTextCtx({
-        text: '@Andy @andy_ai_bot hello',
+        text: '@Krabby @krabby_ai_bot hello',
         entities: [{ type: 'mention', offset: 6, length: 12 }],
       });
       await triggerTextMessage(ctx);
 
-      // Should NOT double-prepend — already starts with @Andy
+      // Should NOT double-prepend — already starts with @Krabby
       expect(opts.onMessage).toHaveBeenCalledWith(
         'tg:100200300',
         expect.objectContaining({
-          content: '@Andy @andy_ai_bot hello',
+          content: '@Krabby @krabby_ai_bot hello',
         }),
       );
     });
@@ -474,7 +474,7 @@ describe('TelegramChannel', () => {
       await channel.connect();
 
       const ctx = createTextCtx({
-        text: 'hey @andy_ai_bot check this',
+        text: 'hey @krabby_ai_bot check this',
         entities: [{ type: 'mention', offset: 4, length: 12 }],
       });
       await triggerTextMessage(ctx);
@@ -483,7 +483,7 @@ describe('TelegramChannel', () => {
       expect(opts.onMessage).toHaveBeenCalledWith(
         'tg:100200300',
         expect.objectContaining({
-          content: '@Andy hey @andy_ai_bot check this',
+          content: '@Krabby hey @krabby_ai_bot check this',
         }),
       );
     });
@@ -903,7 +903,7 @@ describe('TelegramChannel', () => {
 
       await handler(ctx);
 
-      expect(ctx.reply).toHaveBeenCalledWith('Andy is online.');
+      expect(ctx.reply).toHaveBeenCalledWith('Krabby is online.');
     });
   });
 
