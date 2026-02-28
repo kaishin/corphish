@@ -1,0 +1,133 @@
+#!/bin/bash
+# pycalc - Python calculator for mathematical operations
+
+# Check if python3 is available
+if ! command -v python3 &> /dev/null; then
+    echo "Error: python3 not found" >&2
+    exit 1
+fi
+
+# Parse arguments
+if [ "$1" = "--stats" ]; then
+    # Statistics mode
+    data="$2"
+    python3 - <<PYEOF
+import statistics
+import sys
+try:
+    nums = [float(x.strip()) for x in "$data".split(',')]
+    print(f"count: {len(nums)}")
+    print(f"sum: {sum(nums)}")
+    print(f"mean: {statistics.mean(nums)}")
+    print(f"median: {statistics.median(nums)}")
+    print(f"stdev: {statistics.stdev(nums) if len(nums) > 1 else 0}")
+    print(f"min: {min(nums)}")
+    print(f"max: {max(nums)}")
+except Exception as e:
+    print(f"Error: {e}", file=sys.stderr)
+    sys.exit(1)
+PYEOF
+elif [ "$1" = "--solve" ]; then
+    # Solve equation (basic support for polynomial equations)
+    equation="$2"
+    python3 - <<PYEOF
+import sympy as sp
+import sys
+try:
+    x = sp.Symbol('x')
+    # Parse equation (replace = with - to form expression)
+    eq_str = "$equation".replace('=', '-(') + ')'
+    eq = sp.sympify(eq_str)
+    solutions = sp.solve(eq, x)
+    for sol in solutions:
+        print(f"x = {sol}")
+except Exception as e:
+    print(f"Error: {e}", file=sys.stderr)
+    print("Note: Install sympy for equation solving: pip install sympy", file=sys.stderr)
+    sys.exit(1)
+PYEOF
+elif [ "$1" = "--convert" ]; then
+    # Unit conversion
+    conversion="$2"
+    python3 - <<PYEOF
+import sys
+try:
+    # Simple parser for "100 km to miles" format
+    parts = "$conversion".split()
+    value = float(parts[0])
+    from_unit = parts[1].lower()
+    to_unit = parts[3].lower()
+
+    # Simple conversions
+    conversions = {
+        ('km', 'miles'): 0.621371,
+        ('miles', 'km'): 1.60934,
+        ('km', 'm'): 1000,
+        ('m', 'km'): 0.001,
+        ('miles', 'm'): 1609.34,
+        ('m', 'miles'): 0.000621371,
+        ('kg', 'lbs'): 2.20462,
+        ('lbs', 'kg'): 0.453592,
+        ('kg', 'g'): 1000,
+        ('g', 'kg'): 0.001,
+        ('c', 'f'): lambda c: c * 9/5 + 32,
+        ('f', 'c'): lambda f: (f - 32) * 5/9,
+        ('c', 'k'): lambda c: c + 273.15,
+        ('k', 'c'): lambda k: k - 273.15,
+        ('f', 'k'): lambda f: (f - 32) * 5/9 + 273.15,
+        ('k', 'f'): lambda k: (k - 273.15) * 9/5 + 32,
+    }
+
+    key = (from_unit, to_unit)
+    if key in conversions:
+        conv = conversions[key]
+        if callable(conv):
+            result = conv(value)
+        else:
+            result = value * conv
+        print(f"{value} {from_unit} = {result} {to_unit}")
+    else:
+        print(f"Unsupported conversion: {from_unit} to {to_unit}", file=sys.stderr)
+        sys.exit(1)
+except Exception as e:
+    print(f"Error: {e}", file=sys.stderr)
+    sys.exit(1)
+PYEOF
+elif [ -n "$1" ]; then
+    # Basic expression evaluation
+    expr="$1"
+    python3 - <<PYEOF
+import math
+import sys
+
+# Make all math functions available
+from math import *
+from operator import *
+from itertools import *
+from re import *
+
+# Allow common operations
+globals().update(vars(math))
+
+try:
+    result = eval("$expr")
+    print(result)
+except Exception as e:
+    print(f"Error: {e}", file=sys.stderr)
+    sys.exit(1)
+PYEOF
+else
+    echo "Usage: pycalc <expression>"
+    echo "       pycalc --stats '1,2,3,4,5'"
+    echo "       pycalc --solve 'x**2 - 4 = 0'"
+    echo "       pycalc --convert '100 km to miles'"
+    echo ""
+    echo "Examples:"
+    echo "  pycalc '2 + 2'              # 4"
+    echo "  pycalc 'sqrt(16)'           # 4"
+    echo "  pycalc 'factorial(5)'       # 120"
+    echo "  pycalc 'sin(pi/2)'          # 1.0"
+    echo "  pycalc 'log(10)'            # 2.302..."
+    echo "  pycalc 'bin(42)'            # 0b101010"
+    exit 1
+fi

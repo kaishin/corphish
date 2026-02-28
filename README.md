@@ -70,6 +70,77 @@ Just tell Claude Code what you want:
 
 Or run `/customize` for guided changes.
 
+## Installing Skills
+
+There are two types of skills:
+
+### Local Skills (`.claude/skills/`)
+
+These skills modify the NanoClaw codebase using the skills engine. They're used for adding channels, changing triggers, or modifying core behavior.
+
+**Example**: `/add-telegram` adds Telegram support by creating `src/channels/telegram.ts` and modifying core files.
+
+### Container Skills (`container/skills/`)
+
+Container skills are tools that run inside the agent container. They're bash scripts that extend what the agent can do.
+
+**Example**: The [`pycalc`](container/skills/pycalc/SKILL.md) skill adds a Python calculator for math operations.
+
+#### Installing Container Skills
+
+1. **Copy the skill folder** to `container/skills/`:
+
+   ```bash
+   cp -r path/to/skill container/skills/
+   ```
+
+2. **Make sure the script is executable**:
+
+   ```bash
+   chmod +x container/skills/skill-name
+   ```
+
+3. **Rebuild the container**:
+
+   ```bash
+   ./container/build.sh
+   ```
+
+4. **Restart the service**:
+
+   ```bash
+   launchctl unload ~/Library/LaunchAgents/com.nanoclaw.plist
+   launchctl load ~/Library/LaunchAgents/com.nanoclaw.plist
+   ```
+
+The skill will now be available to the agent inside the container.
+
+## Command Reference
+
+### Getting started
+
+- `claude` — Run Claude Code in your project to interact with NanoClaw or trigger `/setup`
+- `/setup` — **First time only** — installs deps, authenticates Discord, builds container, configures service
+- `npm install` — After cloning, after `git pull` with new deps, or after modifying `package.json`
+
+### Development
+
+- `npm run dev` — Run with hot reload while actively developing
+- `npm run typecheck` — Check for TypeScript errors without building (faster than `build`)
+- `npm test` — Run tests after making code changes
+- `npm run build` — Compile TypeScript to `dist/` (needed before deploying as service)
+
+### Container
+
+- `./container/build.sh` — Rebuild after modifying `container/Dockerfile`, `container/skills/`, or pulling container changes
+
+### Service management
+
+- `launchctl load ~/Library/LaunchAgents/com.nanoclaw.plist` — Start background service (after setup or after stopping)
+- `launchctl unload ~/Library/LaunchAgents/com.nanoclaw.plist` — Stop service before updating code or troubleshooting
+- `launchctl list | grep nanoclaw` — Check if service is running
+- `tail -f logs/nanoclaw.log` — Monitor real-time logs
+
 ## Contributing
 
 **Don't add features. Add skills.**
@@ -222,20 +293,20 @@ The orchestrator's IPC watcher polls these directories every second and executes
 
 ### Key files
 
-| File | What it does |
-| ---- | ------------ |
-| `src/index.ts` | Orchestrator: startup, message loop, agent invocation |
-| `src/channels/discord.ts` | Discord connection, auth, send/receive |
-| `src/container-runner.ts` | Builds mount args, spawns containers, streams output |
-| `src/group-queue.ts` | Per-group concurrency, message piping, retry with backoff |
-| `src/ipc.ts` | Watches IPC directories, executes container requests |
-| `src/task-scheduler.ts` | Cron/one-shot task execution |
-| `src/router.ts` | Message formatting and outbound routing |
-| `src/host-proxy.ts` | HTTP CONNECT proxy for container-to-host networking |
-| `src/db.ts` | SQLite schema, queries, migrations |
-| `src/config.ts` | All configuration (env vars, paths, timeouts) |
-| `container/agent-runner/src/index.ts` | Runs inside the container — calls Claude Agent SDK |
-| `groups/{name}/CLAUDE.md` | Per-group agent memory and personality |
+| File                                  | What it does                                              |
+| ------------------------------------- | --------------------------------------------------------- |
+| `src/index.ts`                        | Orchestrator: startup, message loop, agent invocation     |
+| `src/channels/discord.ts`             | Discord connection, auth, send/receive                    |
+| `src/container-runner.ts`             | Builds mount args, spawns containers, streams output      |
+| `src/group-queue.ts`                  | Per-group concurrency, message piping, retry with backoff |
+| `src/ipc.ts`                          | Watches IPC directories, executes container requests      |
+| `src/task-scheduler.ts`               | Cron/one-shot task execution                              |
+| `src/router.ts`                       | Message formatting and outbound routing                   |
+| `src/host-proxy.ts`                   | HTTP CONNECT proxy for container-to-host networking       |
+| `src/db.ts`                           | SQLite schema, queries, migrations                        |
+| `src/config.ts`                       | All configuration (env vars, paths, timeouts)             |
+| `container/agent-runner/src/index.ts` | Runs inside the container — calls Claude Agent SDK        |
+| `groups/{name}/CLAUDE.md`             | Per-group agent memory and personality                    |
 
 ## Community
 
