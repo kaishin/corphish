@@ -23,6 +23,7 @@ RUN apt-get update && apt-get install -y \
     libxshmfence1 \
     curl \
     git \
+    sqlite3 \
     && rm -rf /var/lib/apt/lists/*
 
 # Set Chromium path for agent-browser
@@ -35,6 +36,10 @@ RUN npm install -g agent-browser @anthropic-ai/claude-code
 # Install pycalc (Python calculator)
 COPY skills/pycalc/pycalc /usr/local/bin/pycalc
 RUN chmod +x /usr/local/bin/pycalc
+
+# Install task-tracker (SQLite task tracker)
+COPY skills/task-tracker/task-tracker /usr/local/bin/task-tracker
+RUN chmod +x /usr/local/bin/task-tracker
 
 # Create app directory
 WORKDIR /app
