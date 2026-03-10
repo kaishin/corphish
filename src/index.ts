@@ -348,17 +348,21 @@ async function startMessageLoop(): Promise<void> {
             lastAgentTimestamp[chatJid] || '',
             ASSISTANT_NAME,
           );
-          const messagesToSend =
-            allPending.length > 0 ? allPending : groupMessages;
-          const formatted = formatMessages(messagesToSend);
+
+          // If allPending is empty, the agent cursor is already at or past
+          // these messages — they were processed by a recovery container or
+          // an earlier turn. Skip to avoid re-processing the same messages.
+          if (allPending.length === 0) continue;
+
+          const formatted = formatMessages(allPending);
 
           if (queue.sendMessage(chatJid, formatted)) {
             logger.debug(
-              { chatJid, count: messagesToSend.length },
+              { chatJid, count: allPending.length },
               'Piped messages to active container',
             );
             lastAgentTimestamp[chatJid] =
-              messagesToSend[messagesToSend.length - 1].timestamp;
+              allPending[allPending.length - 1].timestamp;
             saveState();
             // Show typing indicator while the container processes the piped message
             channel.setTyping?.(chatJid, true);

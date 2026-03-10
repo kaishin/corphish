@@ -426,9 +426,14 @@ async function runQuery(
   setTimeout(pollIpcDuringQuery, IPC_POLL_MS);
 
   let newSessionId: string | undefined;
+  let rootSessionId: string | undefined; // Set on first init — used to filter subagent results
   let lastAssistantUuid: string | undefined;
   let messageCount = 0;
   let resultCount = 0;
+
+  // Track whether the agent sent messages via the send_message MCP tool.
+  // If so, we suppress the SDK result text to avoid duplicate output.
+  let agentUsedSendMessage = false;
 
   // Load global CLAUDE.md as additional system context (shared across all groups)
   const globalClaudeMdPath = '/workspace/global/CLAUDE.md';
@@ -520,9 +525,27 @@ async function runQuery(
       lastAssistantUuid = (message as { uuid: string }).uuid;
     }
 
+    // Detect send_message MCP tool calls to avoid duplicate output
+    if (message.type === 'assistant' && 'message' in message) {
+      const content = (message as { message: { content?: Array<{ type: string; name?: string }> } }).message.content;
+      if (Array.isArray(content)) {
+        for (const block of content) {
+          if (block.type === 'tool_use' && block.name === 'mcp__nanoclaw__send_message') {
+            agentUsedSendMessage = true;
+            log('Detected send_message tool call');
+          }
+        }
+      }
+    }
+
     if (message.type === 'system' && message.subtype === 'init') {
       newSessionId = message.session_id;
-      log(`Session initialized: ${newSessionId}`);
+      if (!rootSessionId) {
+        rootSessionId = message.session_id;
+        log(`Root session initialized: ${rootSessionId}`);
+      } else {
+        log(`Subagent session initialized: ${message.session_id}`);
+      }
     }
 
     if (
@@ -546,9 +569,26 @@ async function runQuery(
       log(
         `Result #${resultCount}: subtype=${message.subtype}${textResult ? ` text=${textResult.slice(0, 200)}` : ''}`,
       );
+
+      // Suppress subagent results — they run in separate sessions and the main
+      // agent's result already incorporates their output. Emitting both causes
+      // the user to receive the same content twice with slightly different wording.
+      const resultSessionId = (message as { session_id?: string }).session_id;
+      const isSubagentResult = rootSessionId && resultSessionId && resultSessionId !== rootSessionId;
+      if (isSubagentResult) {
+        log(`Suppressing subagent result (session ${resultSessionId} ≠ root ${rootSessionId})`);
+      }
+
+      // If the agent sent messages via send_message MCP tool, also suppress the
+      // result text to avoid a second delivery of the same content.
+      const effectiveResult = (isSubagentResult || (textResult && agentUsedSendMessage)) ? null : (textResult || null);
+      if (textResult && agentUsedSendMessage && !isSubagentResult) {
+        log('Suppressing result text — agent already sent messages via send_message');
+      }
+
       writeOutput({
         status: 'success',
-        result: textResult || null,
+        result: effectiveResult,
         newSessionId,
       });
     }
